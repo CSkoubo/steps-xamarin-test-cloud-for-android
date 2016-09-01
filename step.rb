@@ -201,16 +201,15 @@ output.each do |_, project_output|
       captured_stdout_err = captured_stdout_err_lines.join('')
 
       test_run_id_regexp_from_async_output = /"TestRunId":"(?<id>.*)",/
-      test_run_id_regexp_from_sync_output = /Test report: https:\/\/testcloud.xamarin.com\/test\/.*_(?<id>.*)\//
-      test_run_id = ''
 
-      match = captured_stdout_err.match(test_run_id_regexp_from_async_output) || captured_stdout_err.match(test_run_id_regexp_from_sync_output)
+      match = captured_stdout_err.match(test_run_id_regexp_from_async_output)
       if match
         captures = match.captures
         test_run_id = captures[0] if captures && captures.length == 1
 
         if test_run_id.to_s != ''
           system("envman add --key BITRISE_XAMARIN_TEST_TO_RUN_ID --value \"#{test_run_id}\"")
+          system("envman add --key BITRISE_XAMARIN_ANDROID_TEST_RUN_URL --value \"https://testcloud.xamarin.com/test/#{test_run_id}\"")
           log_details "Found Test Run ID: #{test_run_id}"
         end
       end
@@ -225,6 +224,22 @@ output.each do |_, project_output|
 
         if error_messages.to_s != ''
           log_fail("Xamarin Test Cloud submit failed, with error(s): #{error_messages}")
+        end
+      end
+    else
+      captured_stdout_err = captured_stdout_err_lines.join('')
+
+      test_run_id_regexp_from_async_output = /"TestRunId":"(?<id>.*)",/
+
+      match = captured_stdout_err.match(test_run_id_regexp_from_sync_output)
+      if match
+        captures = match.captures
+        test_run_id = captures[0] if captures && captures.length == 1
+
+        if test_run_id.to_s != ''
+          system("envman add --key BITRISE_XAMARIN_TEST_TO_RUN_ID --value \"#{test_run_id}\"")
+          system("envman add --key BITRISE_XAMARIN_ANDROID_TEST_RUN_URL --value \"https://testcloud.xamarin.com/test/#{test_run_id}\"")
+          log_details "Found Test Run ID: #{test_run_id}"
         end
       end
     end
