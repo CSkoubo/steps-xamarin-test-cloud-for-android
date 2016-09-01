@@ -229,7 +229,7 @@ output.each do |_, project_output|
     else
       captured_stdout_err = captured_stdout_err_lines.join('')
 
-      test_run_id_regexp_from_async_output = /"TestRunId":"(?<id>.*)",/
+      test_run_id_regexp_from_sync_output = /Test report: https:\/\/testcloud.xamarin.com\/test\/.*_(?<id>.*)\//
 
       match = captured_stdout_err.match(test_run_id_regexp_from_sync_output)
       if match
