@@ -204,6 +204,7 @@ output.each do |_, project_output|
   devices = nil
   if project_output[:xcarchive]
     app_path = export_ios_xcarchive(project_output[:xcarchive], options[:export_options])
+    system("envman add --key BITRISE_IPA_PATH --value \"#{app_path}\"")
     platform = 'ios'
     devices = options[:ios_devices]
   elsif project_output[:apk]
