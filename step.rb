@@ -1,4 +1,5 @@
 require 'optparse'
+require 'tmpdir'
 require 'open3'
 require 'json'
 
@@ -40,6 +41,73 @@ def log_fail(message)
 
   puts "\e[31m#{message}\e[0m"
   exit(1)
+end
+
+def fail_with_message(message)
+  puts "\e[31m#{message}\e[0m"
+  exit(1)
+end
+
+def export_ios_xcarchive(archive_path, export_options)
+  log_info("Exporting ios archive at path: #{archive_path}")
+
+  export_options_path = export_options
+  unless export_options_path
+    log_info('Generating export options')
+
+    # Generate export options
+    #  Bundle install
+    current_dir = File.expand_path(File.dirname(__FILE__))
+    gemfile_path = File.join(current_dir, 'export-options', 'Gemfile')
+
+    bundle_install_command = [
+      "BUNDLE_GEMFILE=\"#{gemfile_path}\"",
+      'bundle',
+      'install'
+    ]
+
+    log_info(bundle_install_command.join(' '))
+    success = system(bundle_install_command.join(' '))
+    fail_with_message('Failed to create export options (required gem install failed)') unless success
+
+    #  Bundle exec
+    temp_dir = Dir.mktmpdir('_bitrise_')
+
+    export_options_path = File.join(temp_dir, 'export_options.plist')
+    export_options_generator = File.join(current_dir, 'export-options', 'generate_ios_export_options.rb')
+
+    bundle_exec_command = [
+      "BUNDLE_GEMFILE=\"#{gemfile_path}\"",
+      'bundle',
+      'exec',
+      'ruby',
+      export_options_generator,
+      "-o \"#{export_options_path}\"",
+      "-a \"#{archive_path}\""
+    ]
+
+    log_info(bundle_exec_command.join(' '))
+    success = system(bundle_exec_command.join(' '))
+    fail_with_message('Failed to create export options') unless success
+  end
+
+  # Export ipa
+  export_command = [
+    'xcodebuild',
+    '-exportArchive',
+    "-archivePath \"#{archive_path}\"",
+    "-exportPath \"#{temp_dir}\"",
+    "-exportOptionsPlist \"#{export_options_path}\""
+  ]
+
+  log_info(export_command.join(' '))
+  success = system(export_command.join(' '))
+  fail_with_message('Failed to export IPA') unless success
+
+  temp_ipa_path = Dir[File.join(temp_dir, '*.ipa')].first
+  fail_with_message('No generated IPA found') unless temp_ipa_path
+
+  temp_ipa_path
 end
 
 # -----------------------
@@ -109,7 +177,7 @@ log_fail('series not specified') unless options[:series]
 #
 # Main
 begin
-  builder = Builder.new(options[:project], options[:configuration], options[:platform], [Api::ANDROID])
+  builder = Builder.new(options[:project], options[:configuration], options[:platform], [Api::IOS, Api::ANDROID])
   builder.build
   builder.build_test
 rescue => ex
@@ -124,9 +192,14 @@ log_fail 'No output generated' if output.nil? || output.empty?
 any_uitest_built = false
 
 output.each do |_, project_output|
+  next if project_output[:xcarchive].nil? || project_output[:uitests].nil? || project_output[:uitests].empty?
+  ipa_path = export_ios_xcarchive(project_output[:xcarchive], options[:export_options])
+  p ipa_path
+  raise "YO!!!"
   next if project_output[:apk].nil? || project_output[:uitests].nil? || project_output[:uitests].empty?
 
   apk_path = project_output[:apk]
+
   log_fail('no generated apk found') unless apk_path
 
   project_output[:uitests].each do |dll_path|

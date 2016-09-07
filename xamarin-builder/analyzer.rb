@@ -306,7 +306,8 @@ class Analyzer
       command << options unless options.nil?
       build_commands << command
     end
-
+    puts "FOO"
+    p build_commands
     [build_commands, errors]
   end
 
@@ -316,6 +317,7 @@ class Analyzer
     configuration = "#{config}|#{platform}"
 
     @solution[:projects].each do |project|
+      puts "Project: #{project}"
       next unless project[:mappings]
       project_configuration = project[:mappings][configuration]
 

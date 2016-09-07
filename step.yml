@@ -29,7 +29,7 @@ inputs:
       description: |
         Xamarin project configuration
       is_required: true
-  - xamarin_platform: Any CPU
+  - xamarin_platform: iPhone
     opts:
       title: Xamarin platform
       description: |

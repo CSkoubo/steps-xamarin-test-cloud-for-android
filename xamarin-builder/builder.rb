@@ -22,6 +22,7 @@ class Builder
 
   def build
     build_commands = @analyzer.build_commands(@configuration, @platform, @project_type_filter)
+    p build_commands
     if build_commands.empty?
       # No iOS or Android application found to build
       # Switching to framework building
