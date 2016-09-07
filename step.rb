@@ -217,7 +217,7 @@ output.each do |_, project_output|
     #
     # Build Request
     request = ['mono', "\"#{test_cloud}\"", 'submit', "\"#{apk_path}\"", options[:api_key]]
-    request << options[:sign_parameters] if options[:sign_parameters]
+    #request << options[:sign_parameters] if options[:sign_parameters]
     request << "--user #{options[:user]}"
     request << "--assembly-dir \"#{assembly_dir}\""
     request << "--devices #{options[:devices]}"
