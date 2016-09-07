@@ -208,6 +208,7 @@ output.each do |_, project_output|
     devices = options[:ios_devices]
   elsif project_output[:apk]
     app_path = project_output[:apk]
+    system("envman add --key BITRISE_SIGNED_APK_PATH --value \"#{app_path}\"")
     platform = 'android'
     devices = options[:android_devices]
   end
