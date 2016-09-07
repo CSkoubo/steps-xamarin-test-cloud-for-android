@@ -49,13 +49,20 @@ inputs:
       description: |
         Api key.
       is_required: true
-  - test_cloud_devices:
+  - test_cloud_ios_devices:
     opts:
-      title: "Device selection id"
-      summary: "Device selection id"
+      title: "iOS device selection id"
+      summary: "iOS device selection id"
       description: |
-        Device selection id from the Test Cloud upload dialog.
-      is_required: true
+        iOS device selection id from the Test Cloud upload dialog.
+      is_required: false
+  - test_cloud_android_devices:
+    opts:
+      title: "Android device selection id"
+      summary: "Android device selection id"
+      description: |
+        Android device selection id from the Test Cloud upload dialog.
+      is_required: false
   - test_cloud_is_async: "yes"
     opts:
       title: "Don't wait for cloud test run to complete"

@@ -109,7 +109,8 @@ def export_ios_xcarchive(archive_path, export_options)
 
   temp_ipa_path
 end
-
+puts "ENVIRONMENT"
+ENV.keys.each {|k| puts "#{k}: #{ENV[k]}"}
 # -----------------------
 # --- Main
 # -----------------------
@@ -122,7 +123,8 @@ options = {
   platform: nil,
   api_key: nil,
   user: nil,
-  devices: nil,
+  android_devices: nil,
+  ios_devices: nil,
   async: 'yes',
   series: 'master',
   parallelization: nil,
@@ -148,6 +150,8 @@ parser = OptionParser.new do |opts|
   end
 end
 parser.parse!
+options[:android_devices] = ENV['test_cloud_android_devices']
+options[:ios_devices] = ENV['test_cloud_ios_devices']
 
 #
 # Print options
@@ -171,7 +175,7 @@ log_fail('configuration not specified') unless options[:configuration]
 log_fail('platform not specified') unless options[:platform]
 log_fail('api_key not specified') unless options[:api_key]
 log_fail('user not specified') unless options[:user]
-log_fail('devices not specified') unless options[:devices]
+log_fail('devices not specified') unless (options[:android_devices] || options[:ios_devices])
 log_fail('series not specified') unless options[:series]
 
 #
@@ -191,23 +195,31 @@ log_fail 'No output generated' if output.nil? || output.empty?
 
 any_uitest_built = false
 
+test_runs = {}
 output.each do |_, project_output|
-  next if project_output[:xcarchive].nil? || project_output[:uitests].nil? || project_output[:uitests].empty?
-  ipa_path = export_ios_xcarchive(project_output[:xcarchive], options[:export_options])
-  p ipa_path
-  #next if project_output[:apk].nil? || project_output[:uitests].nil? || project_output[:uitests].empty?
+  next if project_output[:uitests].nil? || project_output[:uitests].empty?
 
-  apk_path = project_output[:apk]
-  apk_path = ipa_path
+  app_path = nil
+  platform = nil
+  devices = nil
+  if project_output[:xcarchive]
+    app_path = export_ios_xcarchive(project_output[:xcarchive], options[:export_options])
+    platform = 'ios'
+    devices = options[:ios_devices]
+  elsif project_output[:apk]
+    app_path = project_output[:apk]
+    platform = 'android'
+    devices = options[:android_devices]
+  end
 
-  log_fail('no generated apk found') unless apk_path
+  log_fail('no generated app found') unless app_path
 
   project_output[:uitests].each do |dll_path|
     any_uitest_built = true
 
     assembly_dir = File.dirname(dll_path)
 
-    log_info("Uploading #{apk_path} with #{dll_path}")
+    log_info("Uploading #{app_path} with #{dll_path}")
 
     #
     # Get test cloud path
@@ -216,11 +228,11 @@ output.each do |_, project_output|
 
     #
     # Build Request
-    request = ['mono', "\"#{test_cloud}\"", 'submit', "\"#{apk_path}\"", options[:api_key]]
-    #request << options[:sign_parameters] if options[:sign_parameters]
+    request = ['mono', "\"#{test_cloud}\"", 'submit', "\"#{app_path}\"", options[:api_key]]
+    request << options[:sign_parameters] if platform == 'android' && options[:sign_parameters]
     request << "--user #{options[:user]}"
     request << "--assembly-dir \"#{assembly_dir}\""
-    request << "--devices #{options[:devices]}"
+    request << "--devices #{devices}"
     request << '--async-json' if options[:async] == 'yes'
     request << "--series #{options[:series]}" if options[:series]
     request << "--nunit-xml #{@result_log_path}"
@@ -281,6 +293,7 @@ output.each do |_, project_output|
         test_run_id = captures[0] if captures && captures.length == 1
 
         if test_run_id.to_s != ''
+          test_runs[platform] = test_run_id
           system("envman add --key BITRISE_XAMARIN_TEST_TO_RUN_ID --value \"#{test_run_id}\"")
           system("envman add --key BITRISE_XAMARIN_ANDROID_TEST_RUN_URL --value \"https://testcloud.xamarin.com/test/#{test_run_id}\"")
           log_details "Found Test Run ID: #{test_run_id}"
@@ -320,6 +333,9 @@ output.each do |_, project_output|
     system('envman add --key BITRISE_XAMARIN_TEST_RESULT --value succeeded')
     log_done('Xamarin Test Cloud submit succeeded')
   end
+
+  puts "TEST_RUNS"
+  p test_runs
 end
 
 unless any_uitest_built
