@@ -2,6 +2,7 @@ require 'optparse'
 require 'tmpdir'
 require 'open3'
 require 'json'
+require_relative 'xtc_client/client.rb'
 
 require_relative 'xamarin-builder/builder'
 
@@ -335,12 +336,37 @@ output.each do |_, project_output|
     system('envman add --key BITRISE_XAMARIN_TEST_RESULT --value succeeded')
     log_done('Xamarin Test Cloud submit succeeded')
   end
-
-  puts "TEST_RUNS"
-  p test_runs
 end
 
 unless any_uitest_built
   puts "generated_files: #{output}"
   log_fail 'No APK or built UITest found in outputs'
 end
+
+
+puts "Waiting for results"
+finished_platforms = []
+180.times do |i|
+  test_runs.each do |platform, id|
+    next if finished_platforms.include?(platform)
+    c = Xamarin::TestCloud::Api::V0::Client.new(options[:api_key])
+    x = c.test_runs.results(id)
+    finished = x.finished
+    results = x.results
+    print "#{platform}: "
+    print results.collect{|r| "#{r.device_configuration_id}: #{r.status}"}.join(', ')
+
+    if finished
+      finished_platforms << platform
+      puts " ✅"
+    else
+      puts "..."
+    end
+  end
+  if finished_platforms.size == test_runs.size
+    puts "All done!"
+    break
+  end
+  sleep 10
+end
+
