@@ -195,10 +195,10 @@ output.each do |_, project_output|
   next if project_output[:xcarchive].nil? || project_output[:uitests].nil? || project_output[:uitests].empty?
   ipa_path = export_ios_xcarchive(project_output[:xcarchive], options[:export_options])
   p ipa_path
-  raise "YO!!!"
-  next if project_output[:apk].nil? || project_output[:uitests].nil? || project_output[:uitests].empty?
+  #next if project_output[:apk].nil? || project_output[:uitests].nil? || project_output[:uitests].empty?
 
   apk_path = project_output[:apk]
+  apk_path = ipa_path
 
   log_fail('no generated apk found') unless apk_path
 
