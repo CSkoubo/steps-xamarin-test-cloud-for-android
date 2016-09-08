@@ -210,10 +210,13 @@ output.each do |_, project_output|
     devices = options[:ios_devices]
   elsif project_output[:apk]
     unsigned_path = project_output[:apk]
-
-    puts system("jarsigner -sigalg SHA1withDSA -digestalg SHA1 -keypass #{ENV["BITRISE_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD"]} -storepass #{ENV["BITRISE_ANDROID_KEYSTORE_PASSWORD"]} -keystore #{ENV["BITRISE_ANDROID_KEYSTORE_PATH"]} #{unsigned_path} #{ENV["BITRISE_ANDROID_KEYSTORE_ALIAS"]}")
+    x = "jarsigner -sigalg SHA1withDSA -digestalg SHA1 -keypass #{ENV["BITRISE_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD"]} -storepass #{ENV["BITRISE_ANDROID_KEYSTORE_PASSWORD"]} -keystore #{ENV["BITRISE_ANDROID_KEYSTORE_PATH"]} #{unsigned_path} #{ENV["BITRISE_ANDROID_KEYSTORE_ALIAS"]}"
+    puts x
+    puts system(x)
     app_path = unsigned_path.sub(".apk", "-signed.apk")
-    puts system("zipalign 4 #{unsigned_path} #{app_path}")
+    y = "zipalign 4 #{unsigned_path} #{app_path}"
+    puts y
+    puts system(y)
 
     system("envman add --key BITRISE_SIGNED_APK_PATH --value \"#{app_path}\"")
     platform = 'android'
