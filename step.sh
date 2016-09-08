@@ -1,13 +1,15 @@
 #!/bin/bash
-
-gem list
-exit 1
+gem install uber -v 0.0.15
+gem install declarative -v 0.0.8
+gem install multipart-post -v 2.0.0
+gem install faraday -v 0.9.2
+gem install json -v 2.0.2
+gem install multi_json -v 1.11.2
+gem install representable -v 3.0.0
 
 THIS_SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-BUNDLE_GEMFILE=$THIS_SCRIPTDIR/xtc_client/Gemfile bundle install
-
-BUNDLE_GEMFILE=$THIS_SCRIPTDIR/xtc_client/Gemfile bundle exec ruby "${THIS_SCRIPTDIR}/step.rb" \
+ruby "${THIS_SCRIPTDIR}/step.rb" \
   -s "${xamarin_project}" \
   -c "${xamarin_configuration}" \
   -p "${xamarin_platform}" \
