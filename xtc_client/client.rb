@@ -18,7 +18,7 @@ module Xamarin
             @connection = Faraday.new(:url => base_path) do |faraday|
               faraday.request :url_encoded # form-encode POST params
               faraday.authorization :token, api_key
-              faraday.response :logger # log requests to STDOUT
+              #faraday.response :logger # log requests to STDOUT
               faraday.adapter Faraday.default_adapter # make requests with Net::HTTP
             end
 

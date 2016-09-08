@@ -343,7 +343,6 @@ unless any_uitest_built
   log_fail 'No APK or built UITest found in outputs'
 end
 
-sleep 30
 puts "Waiting for results"
 finished_platforms = []
 180.times do |i|
@@ -354,6 +353,11 @@ finished_platforms = []
     finished = x.finished
     results = x.results
     print "#{platform}: "
+
+    unless results
+      puts " No results yet. Carry on!"
+      next
+    end
     print results.collect{|r| "#{r.device_configuration_id}: #{r.status}"}.join(', ')
 
     if finished
