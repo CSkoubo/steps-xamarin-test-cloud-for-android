@@ -1,11 +1,11 @@
 #!/bin/bash
-gem install uber -v 0.0.15
-gem install declarative -v 0.0.8
-gem install multipart-post -v 2.0.0
-gem install faraday -v 0.9.2
-gem install json -v 2.0.2
-gem install multi_json -v 1.11.2
-gem install representable -v 3.0.0
+gem install uber -v 0.0.15 --no-ri --no-rdoc
+gem install declarative -v 0.0.8 --no-ri --no-rdoc
+gem install multipart-post -v 2.0.0 --no-ri --no-rdoc
+gem install faraday -v 0.9.2 --no-ri --no-rdoc
+gem install json -v 2.0.2 --no-ri --no-rdoc
+gem install multi_json -v 1.11.2 --no-ri --no-rdoc
+gem install representable -v 3.0.0 --no-ri --no-rdoc
 
 THIS_SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
