@@ -1,5 +1,7 @@
 #!/bin/bash
 
+gem list
+exit 1
 
 THIS_SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
