@@ -1,8 +1,11 @@
 #!/bin/bash
 
+
 THIS_SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ruby "${THIS_SCRIPTDIR}/step.rb" \
+BUNDLE_GEMFILE=$THIS_SCRIPTDIR/xtc_client/Gemfile bundle install
+
+BUNDLE_GEMFILE=$THIS_SCRIPTDIR/xtc_client/Gemfile bundle exec ruby "${THIS_SCRIPTDIR}/step.rb" \
   -s "${xamarin_project}" \
   -c "${xamarin_configuration}" \
   -p "${xamarin_platform}" \
