@@ -201,7 +201,6 @@ output.each do |_, project_output|
   platform = nil
   devices = nil
   if project_output[:xcarchive]
-    next
     app_path = export_ios_xcarchive(project_output[:xcarchive], options[:export_options])
     system("envman add --key BITRISE_IPA_PATH --value \"#{app_path}\"")
     platform = 'ios'
