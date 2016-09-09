@@ -212,11 +212,11 @@ output.each do |_, project_output|
     unsigned_path = project_output[:apk]
     x = "jarsigner -sigalg SHA1withDSA -digestalg SHA1 -keypass #{ENV["BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD"]} -storepass #{ENV["BITRISEIO_ANDROID_KEYSTORE_PASSWORD"]} -keystore #{ENV["BITRISEIO_ANDROID_KEYSTORE_PATH"]} #{unsigned_path} #{ENV["BITRISEIO_ANDROID_KEYSTORE_ALIAS"]}"
     puts x
-    puts system(x)
+    puts `x`
     app_path = unsigned_path.sub(".apk", "-signed.apk")
     y = "zipalign 4 #{unsigned_path} #{app_path}"
     puts y
-    puts system(y)
+    puts `y`
 
     system("envman add --key BITRISE_SIGNED_APK_PATH --value \"#{app_path}\"")
     platform = 'android'
