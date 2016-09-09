@@ -16,7 +16,6 @@ ruby "${THIS_SCRIPTDIR}/step.rb" \
   -u "${xamarin_user}" \
   -a "${test_cloud_api_key}" \
   -d "${test_cloud_devices}" \
-  -y "${test_cloud_is_async}" \
   -r "${test_cloud_series}" \
   -l "${test_cloud_parallelization}" \
   -g "${sign_parameters}" \

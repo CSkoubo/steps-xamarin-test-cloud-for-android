@@ -126,7 +126,6 @@ options = {
   user: nil,
   android_devices: nil,
   ios_devices: nil,
-  async: 'yes',
   series: 'master',
   parallelization: nil,
   sign_parameters: nil,
@@ -141,7 +140,6 @@ parser = OptionParser.new do |opts|
   opts.on('-a', '--api key', 'Api key') { |a| options[:api_key] = a unless a.to_s == '' }
   opts.on('-u', '--user user', 'User') { |u| options[:user] = u unless u.to_s == '' }
   opts.on('-d', '--devices devices', 'Devices') { |d| options[:devices] = d unless d.to_s == '' }
-  opts.on('-y', '--async async', 'Async') { |y| options[:async] = y unless y.to_s == '' }
   opts.on('-r', '--series series', 'Series') { |r| options[:series] = r unless r.to_s == '' }
   opts.on('-l', '--parallelization parallelization', 'Parallelization') { |l| options[:parallelization] = l unless l.to_s == '' }
   opts.on('-g', '--sign parameters', 'Sign') { |g| options[:sign_parameters] = g unless g.to_s == '' }
@@ -163,7 +161,6 @@ log_details("* platform: #{options[:platform]}")
 log_details('* api_key: ***')
 log_details("* user: #{options[:user]}")
 log_details("* devices: #{options[:devices]}")
-log_details("* async: #{options[:async]}")
 log_details("* series: #{options[:series]}")
 log_details("* parallelization: #{options[:parallelization]}")
 log_details('* sign_parameters: ***')
@@ -204,6 +201,7 @@ output.each do |_, project_output|
   platform = nil
   devices = nil
   if project_output[:xcarchive]
+    next
     app_path = export_ios_xcarchive(project_output[:xcarchive], options[:export_options])
     system("envman add --key BITRISE_IPA_PATH --value \"#{app_path}\"")
     platform = 'ios'
@@ -247,7 +245,7 @@ output.each do |_, project_output|
     request << "--user #{options[:user]}"
     request << "--assembly-dir \"#{assembly_dir}\""
     request << "--devices #{devices}"
-    request << '--async-json' if options[:async] == 'yes'
+    request << '--async-json'
     request << "--series #{options[:series]}" if options[:series]
     request << "--nunit-xml #{@result_log_path}"
     request << '--fixture-chunk' if options[:parallelization] == 'by_test_fixture'
@@ -294,53 +292,32 @@ output.each do |_, project_output|
       log_fail('Xamarin Test Cloud failed')
     end
 
-    #
-    # Set output envs
-    if options[:async] == 'yes'
-      captured_stdout_err = captured_stdout_err_lines.join('')
+    captured_stdout_err = captured_stdout_err_lines.join('')
 
-      test_run_id_regexp_from_async_output = /"TestRunId":"(?<id>.*)",/
+    test_run_id_regexp_from_async_output = /"TestRunId":"(?<id>.*)",/
 
-      match = captured_stdout_err.match(test_run_id_regexp_from_async_output)
-      if match
-        captures = match.captures
-        test_run_id = captures[0] if captures && captures.length == 1
+    match = captured_stdout_err.match(test_run_id_regexp_from_async_output)
+    if match
+      captures = match.captures
+      test_run_id = captures[0] if captures && captures.length == 1
 
-        if test_run_id.to_s != ''
-          test_runs[platform] = test_run_id
-          system("envman add --key BITRISE_XAMARIN_TEST_TO_RUN_ID --value \"#{test_run_id}\"")
-          system("envman add --key BITRISE_XAMARIN_ANDROID_TEST_RUN_URL --value \"https://testcloud.xamarin.com/test/#{test_run_id}\"")
-          log_details "Found Test Run ID: #{test_run_id}"
-        end
+      if test_run_id.to_s != ''
+        test_runs[platform] = test_run_id
+        log_details "Found Test Run ID: #{test_run_id}"
+        system("envman add --key BITRISE_XAMARIN_#{platform.upcase}_TEST_RUN_URL --value \"https://testcloud.xamarin.com/test/#{test_run_id}\"")
       end
+    end
 
-      error_messages_regexp = /"ErrorMessages":\[(?<error>.*)\],/
-      error_messages = ''
+    error_messages_regexp = /"ErrorMessages":\[(?<error>.*)\],/
+    error_messages = ''
 
-      match = captured_stdout_err.match(error_messages_regexp)
-      if match
-        captures = match.captures
-        error_messages = captures[0] if captures && captures.length == 1
+    match = captured_stdout_err.match(error_messages_regexp)
+    if match
+      captures = match.captures
+      error_messages = captures[0] if captures && captures.length == 1
 
-        if error_messages.to_s != ''
-          log_fail("Xamarin Test Cloud submit failed, with error(s): #{error_messages}")
-        end
-      end
-    else
-      captured_stdout_err = captured_stdout_err_lines.join('')
-
-      test_run_id_regexp_from_sync_output = /Test report: https:\/\/testcloud.xamarin.com\/test\/.*_(?<id>.*)\//
-
-      match = captured_stdout_err.match(test_run_id_regexp_from_sync_output)
-      if match
-        captures = match.captures
-        test_run_id = captures[0] if captures && captures.length == 1
-
-        if test_run_id.to_s != ''
-          system("envman add --key BITRISE_XAMARIN_TEST_TO_RUN_ID --value \"#{test_run_id}\"")
-          system("envman add --key BITRISE_XAMARIN_ANDROID_TEST_RUN_URL --value \"https://testcloud.xamarin.com/test/#{test_run_id}\"")
-          log_details "Found Test Run ID: #{test_run_id}"
-        end
+      if error_messages.to_s != ''
+        log_fail("Xamarin Test Cloud submit failed, with error(s): #{error_messages}")
       end
     end
 
@@ -368,6 +345,12 @@ finished_platforms = []
     unless results
       puts " No results yet. Carry on!"
       next
+    end
+    results.each do |r|
+      if r.status == 'failed'
+        puts "Failed on #{r.device_configuration_id}. Failing test!"
+        exit 1
+      end
     end
     print results.collect{|r| "#{r.device_configuration_id}: #{r.status}"}.join(', ')
 
