@@ -214,7 +214,10 @@ output.each do |_, project_output|
     puts x
     puts `#{x}`
     app_path = unsigned_path.sub(".apk", "-signed.apk")
-    y = "zipalign 4 #{unsigned_path} #{app_path}"
+    zipalign_cmd = Dir[File.join(ENV["ANDROID_HOME"], 'build-tools', '/**/zipalign')].first
+    raise "zipalign not found!" unless zipalign_cmd
+
+    y = "#{zipalign_cmd} 4 #{unsigned_path} #{app_path}"
     puts y
     puts `#{y}`
 
