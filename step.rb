@@ -364,6 +364,7 @@ finished_platforms = []
     puts "All done!"
     break
   end
+  $stdout.flush
   sleep 10
 end
 
