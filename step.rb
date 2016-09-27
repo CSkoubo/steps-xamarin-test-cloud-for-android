@@ -196,6 +196,7 @@ any_uitest_built = false
 test_runs = {}
 output.each do |_, project_output|
   next if project_output[:uitests].nil? || project_output[:uitests].empty?
+  puts "Project output: #{project_output}"
 
   app_path = nil
   platform = nil
