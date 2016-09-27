@@ -173,7 +173,7 @@ class Analyzer
               sign_android ? '/t:SignAndroidPackage' : '/t:PackageForAndroid',
               "/p:Configuration=\"#{project_config}\""
           ]
-          build_command << "/p:Platform=\"#{project_platform}\"" unless project_platform.eql?("AnyCPU")
+          #build_command << "/p:Platform=\"#{project_platform}\"" unless project_platform.eql?("AnyCPU")
           build_command << "\"#{project[:path]}\""
           build_command << "/verbosity:minimal"
           build_command << "/nologo"
@@ -356,6 +356,8 @@ class Analyzer
         outputs_hash[project[:id]][:xcarchive] = full_output_path if full_output_path
         outputs_hash[project[:id]][:api] = project[:api]
       when Api::ANDROID
+        configuration = "#{config}"
+        project_configuration = project[:mappings][configuration]
         next unless project_type_filter.include? Api::ANDROID
         next unless project[:android_application]
         next unless project_configuration
