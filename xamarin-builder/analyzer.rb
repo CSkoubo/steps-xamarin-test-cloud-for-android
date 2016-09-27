@@ -173,7 +173,7 @@ class Analyzer
               sign_android ? '/t:SignAndroidPackage' : '/t:PackageForAndroid',
               "/p:Configuration=\"#{project_config}\""
           ]
-          #build_command << "/p:Platform=\"#{project_platform}\"" unless project_platform.eql?("AnyCPU")
+          build_command << "/p:Platform=\"#{project_platform}\"" unless project_platform.eql?("AnyCPU")
           build_command << "\"#{project[:path]}\""
           build_command << "/verbosity:minimal"
           build_command << "/nologo"
