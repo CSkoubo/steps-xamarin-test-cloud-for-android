@@ -223,6 +223,7 @@ output.each do |_, project_output|
     devices = options[:android_devices]
   end
 
+  puts "App path: #{app_path}"
   log_fail('no generated app found') unless app_path
 
   project_output[:uitests].each do |dll_path|
