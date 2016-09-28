@@ -1,22 +1,19 @@
 #!/bin/bash
-gem install uber -v 0.0.15 --no-ri --no-rdoc
-gem install declarative -v 0.0.8 --no-ri --no-rdoc
-gem install multipart-post -v 2.0.0 --no-ri --no-rdoc
-gem install faraday -v 0.9.2 --no-ri --no-rdoc
-gem install json -v 2.0.2 --no-ri --no-rdoc
-gem install multi_json -v 1.11.2 --no-ri --no-rdoc
-gem install representable -v 3.0.0 --no-ri --no-rdoc
+
+function install_gem {
+  gem list -i $1 -v $2 > /dev/null || gem install $1 -v $2 --no-ri --no-rdoc
+}
+
+install_gem uber 0.0.15
+install_gem declarative 0.0.8
+install_gem multipart-post 2.0.0
+install_gem faraday 0.9.2
+install_gem json 2.0.2
+install_gem multi_json 1.11.2
+install_gem representable 3.0.0
 
 THIS_SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ruby "${THIS_SCRIPTDIR}/step.rb" \
-  -s "${xamarin_project}" \
-  -c "${xamarin_configuration}" \
-  -p "${xamarin_platform}" \
-  -u "${xamarin_user}" \
-  -a "${test_cloud_api_key}" \
-  -d "${test_cloud_devices}" \
-  -r "${test_cloud_series}" \
-  -l "${test_cloud_parallelization}" \
-  -g "${sign_parameters}" \
-  -m "${other_parameters}"
+  -a "${test_cloud_api_key}"
+  
