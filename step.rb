@@ -2,6 +2,8 @@ require 'optparse'
 require 'tmpdir'
 require 'open3'
 require 'json'
+require 'nokogiri'
+require 'terminal-table'
 require_relative 'xtc_client/client.rb'
 
 # -----------------------
@@ -47,6 +49,38 @@ def fail_with_message(message)
   exit(1)
 end
 
+def process_nunit_data(nunit_urls)
+  results = {}
+  nunit_urls.each do |platform, zip_url|
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        puts zip_url
+        raise "Download failed!" unless system("curl -s -o nunit.zip \"#{zip_url}\"")
+        raise "Unzip failed" unless system("unzip nunit.zip")
+        Dir["*.xml"].each do |f|
+          puts "XML file: #{f}"
+          doc = File.open(f) { |f| Nokogiri::XML(f) }
+          doc.xpath("//test-case[contains(@name, '(#{platform})')]").each do |x|
+            k = x["name"].sub("(#{platform})", "")
+            results[k] = {} unless results[k]
+
+            result = x["result"]
+            if x['result'] == "Failure"
+              categories = x.xpath(".//categories/category").collect{|x| x["name"]}.compact
+              if categories.include? 'bug'
+                result = "Inconclusive"
+              end
+            end
+            results[k][f.sub('_nunit_report.xml', '')] = {result: result}
+          end
+        end
+      end
+    end
+  end
+  results
+end
+
+
 # -----------------------
 # --- Main
 # -----------------------
@@ -72,6 +106,8 @@ puts test_runs
 
 puts "Waiting for results"
 finished_platforms = []
+nunit_urls = {}
+
 180.times do |i|
   test_runs.each do |platform, id|
     next if finished_platforms.include?(platform)
@@ -79,25 +115,15 @@ finished_platforms = []
     x = c.test_runs.results(id)
     finished = x.finished
     results = x.results
-    print "#{platform}: "
-
-    unless results
-      puts " No results yet. Carry on!"
-      next
-    end
-    results.each do |r|
-      if r.status == 'failed'
-        puts "Failed on #{r.device_configuration_id}. Failing test!"
-        exit 1
-      end
-    end
-    print results.collect{|r| "#{r.device_configuration_id}: #{r.status}"}.join(', ')
+    print "#{platform}:"
 
     if finished
       finished_platforms << platform
-      puts " ✅"
+      nunit_urls[platform] = x.logs.nunit_xml_zip
+      puts "done"
     else
-      puts "..."
+      puts " No results yet. Carry on!"
+      next
     end
   end
   if finished_platforms.size == test_runs.size
@@ -107,4 +133,28 @@ finished_platforms = []
   $stdout.flush
   sleep 10
 end
+
+failed = false
+
+results = process_nunit_data(nunit_urls)
+rows = []
+columns = results.values.first.keys
+rows << [""] + columns
+results.each do |test_case, test_results|
+  row = [test_case]
+  columns.each do |device|
+    result = test_results[device][:result]
+    row << result
+    if result[device] == "Failure"
+      puts "#{device} failed"
+      failed = true
+    end
+  end
+  rows << row
+end
+
+puts Terminal::Table.new(rows: rows)
+
+
+exit 1 if failed
 

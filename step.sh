@@ -11,6 +11,7 @@ install_gem faraday 0.9.2
 install_gem json 2.0.2
 install_gem multi_json 1.11.2
 install_gem representable 3.0.0
+install_gem terminal-table 1.4.5
 
 THIS_SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
