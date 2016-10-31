@@ -145,7 +145,7 @@ results.each do |test_case, test_results|
   columns.each do |device|
     result = test_results[device][:result]
     row << result
-    if result[device] == "Failure"
+    if ['Failure', 'Error'].include?(result)
       puts "#{device} failed"
       failed = true
     end
