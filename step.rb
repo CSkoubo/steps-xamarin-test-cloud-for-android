@@ -108,7 +108,7 @@ puts "Waiting for results"
 finished_platforms = []
 nunit_urls = {}
 
-180.times do |i|
+while true do
   test_runs.each do |platform, id|
     next if finished_platforms.include?(platform)
     c = Xamarin::TestCloud::Api::V0::Client.new(options[:api_key])
