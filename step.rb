@@ -100,7 +100,7 @@ parser = OptionParser.new do |opts|
 end
 parser.parse!
 
-test_runs = {'Android' => ENV.fetch('BITRISE_XAMARIN_ANDROID_TEST_ID'), 'iOS' => ENV.fetch('BITRISE_XAMARIN_IOS_TEST_ID')}
+test_runs = {'Android' => ENV.fetch('BITRISE_XAMARIN_ANDROID_TEST_ID')}
 puts test_runs
 
 
